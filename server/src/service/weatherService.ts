@@ -26,18 +26,13 @@ class WeatherService {
   // API key from the environment variables
   private apiKey = process.env.OPENWEATHER_API_KEY;
 
-  // City name property (optional if passed dynamically)
-  private cityName: string;
-
-  constructor() {
-    this.cityName = '';
-  }
+  // Remove the 'cityName' property
 
   // Fetch location data (geo data) from OpenWeather API using the city name
   private async fetchLocationData(query: string): Promise<Coordinates | null> {
-    const geoUrl = `${this.baseURL}geo/1.0/direct?q=${query}&limit=1&appid=${this.apiKey}`;
+    const geoUrl = this.buildGeocodeQuery(query); // Call the buildGeocodeQuery method
     const response = await fetch(geoUrl);
-    const data = await response.json();
+    const data = await response.json() as { lat: number; lon: number }[];
     if (data.length === 0) return null;
     const { lat, lon } = data[0];
     return { lat, lon };
@@ -51,10 +46,7 @@ class WeatherService {
     };
   }
 
-  // Build the geocode query URL
-  private buildGeocodeQuery(city: string): string {
-    return `${this.baseURL}geo/1.0/direct?q=${city}&limit=1&appid=${this.apiKey}`;
-  }
+  // Remove the unused method
 
   // Build the weather query URL using coordinates
   private buildWeatherQuery(coordinates: Coordinates): string {
@@ -88,7 +80,7 @@ class WeatherService {
   }
 
   // Build the forecast array (5 days forecast)
-  private buildForecastArray(currentWeather: Weather, weatherData: any[]): Weather[] {
+  private buildForecastArray(weatherData: any[]): Weather[] {
     return weatherData.map((weather) => ({
       temperature: weather.main.temp,
       humidity: weather.main.humidity,
@@ -102,7 +94,11 @@ class WeatherService {
   async getWeatherForCity(city: string): Promise<any> {
     try {
       const coordinates = await this.fetchAndDestructureLocationData(city);
-      const weatherData = await this.fetchWeatherData(coordinates);
+      if (coordinates) {
+        await this.fetchWeatherData(coordinates);
+      } else {
+        throw new Error('Coordinates not found');
+      }
       const currentWeather = this.parseCurrentWeather(weatherData);
       const forecastWeather = this.buildForecastArray(currentWeather, weatherData.list.slice(1, 6)); // Get next 5 days
 

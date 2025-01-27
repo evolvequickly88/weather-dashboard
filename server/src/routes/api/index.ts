@@ -1,7 +1,7 @@
 import { Router } from 'express';
 const router = Router();
 
-import weatherRoutes from './weatherRoutes'; // Remove the `.js` extension if you're using TypeScript
+import weatherRoutes from './weatherRoutes.js';
 
 router.use('/weather', weatherRoutes);
 
